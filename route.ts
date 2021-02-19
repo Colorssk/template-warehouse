@@ -1,7 +1,7 @@
 export default {
-  key: 'venueList',
-  name: '场馆列表',
-  path: '/venue/list',
-  nest: '/layout/venue/list',
-  content: () => import(/* webpackChunkName: "venueList" */ './view'),
+  key: 'proxyVirtualCurrencyRecord',
+  name: '代理虚拟币归集记录',
+  path: '/finance/proxyVirtualCurrency/record',
+  nest: '/layout/finance/proxyVirtualCurrency/record',
+  content: () => import(/* webpackChunkName: "proxyVirtualCurrencyRecord" */ './view'),
 }

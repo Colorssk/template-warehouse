@@ -9,6 +9,8 @@ import XTable from '@/components/xTable'
 import ColumnText from '@/components/xTable/columnText'
 import Platform, { getPlatformInitValue, platformItemKey } from '@/components/platform'
 import { initDuration, formatDuration } from './utils'
+// utils
+import { onEnter, handleDownLoadFile } from '@/views/utils/helpers'
 // constants
 import { authMap } from './constants'
 // services
@@ -16,15 +18,14 @@ import TableService, { initTableData } from '@/library/services/tableService'
 // styles
 import styles from './style.module.scss'
 
-class SpecialMatchList extends TableService {
+class ProxyVirtualCurrencyRecord extends TableService {
   public state = {
     loading: false,
     tableData: initTableData,
     listTitle: [] as any, // 平台名称
   }
 
-  public componentDidMount() {
-  }
+  public componentDidMount() {}
 
   public getData = (sendingData: any = {}) => {
     // this.getSingle({
@@ -36,6 +37,11 @@ class SpecialMatchList extends TableService {
     //     formatDuration(sendingData.duration),
     //   ),
     // })
+  }
+  // 切换平台
+  private onChangePlatform = (platform) => {
+    this.handlePlatform(platform)
+    this.getAll()
   }
   private columns = [
     {
@@ -55,10 +61,7 @@ class SpecialMatchList extends TableService {
       width: 180,
       align: 'center',
       render: (text, item) => {
-        return (
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-          </div>
-        )
+        return <div style={{ display: 'flex', justifyContent: 'center' }}></div>
       },
     },
   ]
@@ -89,27 +92,27 @@ class SpecialMatchList extends TableService {
           </Form.Item>
         </Row>
         <Row className={'searchFromView'} style={{ width: '100%' }}>
-            <Form.Item label="订单号 Order Number" name="bill_no">
-              <Input placeholder="请输入订单号" onKeyDown={(e) => onEnter(e, this.onSearch)} />
-            </Form.Item>
-            <Form.Item label="操作时间" name="duration">
-              <DatePicker.RangePicker
-                format={'YYYY-MM-DD HH:mm:ss'}
-                showTime
-                allowClear={false}
-                picker={'date'}
-              />
-            </Form.Item>
-            <Form.Item>
-              <Button type="primary" loading={loading} onClick={this.onSearch}>
-               搜索
-              </Button>
-            </Form.Item>
-            <Form.Item>
-              <Button type="danger" loading={loading}  onClick={this.onRest}>
-                重置
-              </Button>
-            </Form.Item>
+          <Form.Item label="订单号 Order Number" name="bill_no">
+            <Input placeholder="请输入订单号" onKeyDown={(e) => onEnter(e, this.onSearch)} />
+          </Form.Item>
+          <Form.Item label="操作时间" name="duration">
+            <DatePicker.RangePicker
+              format={'YYYY-MM-DD HH:mm:ss'}
+              showTime
+              allowClear={false}
+              picker={'date'}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" loading={loading} onClick={this.onSearch}>
+              搜索
+            </Button>
+          </Form.Item>
+          <Form.Item>
+            <Button type="danger" loading={loading} onClick={this.onRest}>
+              重置
+            </Button>
+          </Form.Item>
         </Row>
         <XTable
           loading={loading}
@@ -131,4 +134,4 @@ export default compose(
   connect((state: any) => ({
     user: state.user,
   })),
-)(SpecialMatchList)
+)(ProxyVirtualCurrencyRecord)
