@@ -15,8 +15,8 @@ export function initUpdateDuration() {
 export function formatDuration(duration, formatText = 'YYYY-MM-DD HH:mm:ss') {
   try {
     return {
-      startTime: duration[0].format(formatText),
-      endTime: duration[1].format(formatText),
+      start_at: duration[0].format(formatText),
+      end_at: duration[1].format(formatText),
     }
   } catch (e) {
     return {}
@@ -26,8 +26,8 @@ export function formatDuration(duration, formatText = 'YYYY-MM-DD HH:mm:ss') {
 export function formatUpdateDuration(duration, formatText = 'YYYY-MM-DD HH:mm:ss') {
   try {
     return {
-      upstartAt: duration[0].format(formatText),
-      upendAt: duration[1].format(formatText),
+      start_at: duration[0].format(formatText),
+      end_at: duration[1].format(formatText),
     }
   } catch (e) {
     return {}

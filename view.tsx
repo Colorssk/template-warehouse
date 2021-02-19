@@ -12,9 +12,10 @@ import { initDuration, formatDuration } from './utils'
 // utils
 import { onEnter, handleDownLoadFile } from '@/views/utils/helpers'
 // constants
-import { authMap } from './constants'
+import { authMap, moneyTypes, statisOptions } from './constants'
 // services
 import TableService, { initTableData } from '@/library/services/tableService'
+import { getList, exportExcel } from './services'
 // styles
 import styles from './style.module.scss'
 
@@ -22,21 +23,62 @@ class ProxyVirtualCurrencyRecord extends TableService {
   public state = {
     loading: false,
     tableData: initTableData,
-    listTitle: [] as any, // 平台名称
+    passageOptions: [] as any, //通道筛选下拉框
   }
 
-  public componentDidMount() {}
+  public componentDidMount() {
+    this.bindAction({
+      api: getList,
+      hasPrivilege: hasPrivilege(authMap.search),
+      bindingData: 'tableData',
+      successCallback: (res) => {
+        const { passageList } = res.data
+        this.setState({
+          passageOptions: Object.keys(passageList).map((el) => ({
+            label: el,
+            value: el,
+          })),
+        })
+      },
+    })
 
+    //导出接口
+    this.bindAction({
+      api: exportExcel,
+      hasPrivilege: hasPrivilege(authMap.export),
+      successCallback: (res) => {
+        handleDownLoadFile(res, '代理虚拟币归集记录')
+        message.success('导出成功')
+      },
+    })
+    this.onSearch()
+  }
+
+  // 导出excel
+  private cacheSendingData: any
+
+  private onExport = () => {
+    this.getSingle({
+      action: exportExcel.toString(),
+      sendingData: this.cacheSendingData,
+    })
+  }
   public getData = (sendingData: any = {}) => {
-    // this.getSingle({
-    //   action: getList.toString(),
-    //   sendingData: Object.assign(
-    //     {},
-    //     this.state.tableData,
-    //     sendingData,
-    //     formatDuration(sendingData.duration),
-    //   ),
-    // })
+    ;(this.cacheSendingData = Object.assign(
+      {},
+      this.state.tableData,
+      sendingData,
+      formatDuration(sendingData.duration),
+    )),
+      this.getSingle({
+        action: getList.toString(),
+        sendingData: Object.assign(
+          {},
+          this.state.tableData,
+          sendingData,
+          formatDuration(sendingData.duration),
+        ),
+      })
   }
   // 切换平台
   private onChangePlatform = (platform) => {
@@ -45,30 +87,72 @@ class ProxyVirtualCurrencyRecord extends TableService {
   }
   private columns = [
     {
-      title: '平台名称',
-      dataIndex: 'api_name',
+      title: '归集批次',
+      dataIndex: 'batch',
       align: 'center',
     },
-    // {
-    //   title: '状态',
-    //   dataIndex: 'on_line',
-    //   align: 'center',
-    //   render: (text) => <ColumnText text={text} list={statusType} style={{ fontWeight: 'bold' }} />,
-    // },
     {
-      title: '操作',
-      dataIndex: 'operation',
-      width: 180,
+      title: '转出地址',
+      dataIndex: 'out_address',
       align: 'center',
-      render: (text, item) => {
-        return <div style={{ display: 'flex', justifyContent: 'center' }}></div>
-      },
+    },
+    {
+      title: '转入地址',
+      dataIndex: 'in_address',
+      align: 'center',
+    },
+    {
+      title: '所属通道',
+      dataIndex: 'pay_name',
+      align: 'center',
+    },
+    {
+      title: '货币类型',
+      dataIndex: 'money_type',
+      align: 'center',
+      render: (text) => <ColumnText text={text} list={moneyTypes} />,
+    },
+    {
+      title: '归集金额',
+      dataIndex: 'money',
+      align: 'center',
+    },
+    {
+      title: '手续费货币类型',
+      dataIndex: 'fee_type',
+      align: 'center',
+    },
+    {
+      title: '手续费金额',
+      dataIndex: 'fee_money',
+      align: 'center',
+    },
+    {
+      title: '强制转账金额',
+      dataIndex: 'force_money',
+      align: 'center',
+    },
+    {
+      title: '开始时间',
+      dataIndex: 'start_at',
+      align: 'center',
+    },
+    {
+      title: '结束时间',
+      dataIndex: 'end_at',
+      align: 'center',
+    },
+    {
+      title: '归集状态',
+      dataIndex: 'status',
+      align: 'center',
+      render: (text) => <ColumnText text={text} list={statisOptions} />,
     },
   ]
 
   public render() {
     const {
-      state: { loading, listTitle, tableData },
+      state: { loading, tableData, passageOptions },
       props: { user },
     } = this
 
@@ -92,8 +176,22 @@ class ProxyVirtualCurrencyRecord extends TableService {
           </Form.Item>
         </Row>
         <Row className={'searchFromView'} style={{ width: '100%' }}>
-          <Form.Item label="订单号 Order Number" name="bill_no">
-            <Input placeholder="请输入订单号" onKeyDown={(e) => onEnter(e, this.onSearch)} />
+          <Form.Item label="归集批次" name="batch">
+            <Input placeholder="请输入归集批次" onKeyDown={(e) => onEnter(e, this.onSearch)} />
+          </Form.Item>
+          <Form.Item label="转出地址" name="out_address">
+            <Input placeholder="请输入转出地址" onKeyDown={(e) => onEnter(e, this.onSearch)} />
+          </Form.Item>
+          <Form.Item label="转入地址" name="in_address">
+            <Input placeholder="请输入转入地址" onKeyDown={(e) => onEnter(e, this.onSearch)} />
+          </Form.Item>
+          <Form.Item label="货币类型" name="money_type">
+            <Select
+              style={{ width: '200px' }}
+              placeholder="请选择"
+              options={moneyTypes}
+              onKeyDown={(e) => onEnter(e, this.onSearch)}
+            />
           </Form.Item>
           <Form.Item label="操作时间" name="duration">
             <DatePicker.RangePicker
@@ -101,6 +199,22 @@ class ProxyVirtualCurrencyRecord extends TableService {
               showTime
               allowClear={false}
               picker={'date'}
+            />
+          </Form.Item>
+          <Form.Item label="归集状态" name="status">
+            <Select
+              style={{ width: '200px' }}
+              placeholder="请选择"
+              options={statisOptions}
+              onKeyDown={(e) => onEnter(e, this.onSearch)}
+            />
+          </Form.Item>
+          <Form.Item label="通道筛选" name="passage">
+            <Select
+              style={{ width: '200px' }}
+              placeholder="请选择"
+              options={passageOptions}
+              onKeyDown={(e) => onEnter(e, this.onSearch)}
             />
           </Form.Item>
           <Form.Item>
@@ -113,6 +227,13 @@ class ProxyVirtualCurrencyRecord extends TableService {
               重置
             </Button>
           </Form.Item>
+          <Privilege k={authMap.export}>
+            <Form.Item>
+              <Button type="primary" loading={loading} onClick={this.onExport}>
+                导出
+              </Button>
+            </Form.Item>
+          </Privilege>
         </Row>
         <XTable
           loading={loading}
